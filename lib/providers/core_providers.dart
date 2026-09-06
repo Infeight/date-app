@@ -8,6 +8,7 @@ import '../data/repositories/discovery_repository.dart';
 import '../data/repositories/location_sharing_repository.dart';
 import '../data/repositories/match_repository.dart';
 import '../data/repositories/media_repository.dart';
+import '../data/repositories/notification_repository.dart';
 import '../data/repositories/onboarding_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/safety_repository.dart';
@@ -15,6 +16,7 @@ import '../data/repositories/subscription_repository.dart';
 import '../data/repositories/verification_repository.dart';
 import '../data/services/api_service.dart';
 import '../data/services/auth_service.dart';
+import '../presentation/notifications/repo/notification_repo.dart';
 
 /// Dependency-injection graph for the data layer. Screens only touch the
 /// feature providers; these wire the plumbing beneath them.
@@ -79,4 +81,9 @@ final safetyRepositoryProvider = Provider<SafetyRepository>(
 /// Streams Supabase auth changes (sign-in / sign-out / token refresh).
 final authStateProvider = StreamProvider<AuthState>(
   (ref) => Supabase.instance.client.auth.onAuthStateChange,
+);
+
+
+final notificationRepositoryProvider = Provider<NotificationRepo>(
+        (ref) => NotificationRepo(ref.watch(apiClientProvider)),
 );

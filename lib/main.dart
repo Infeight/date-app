@@ -26,60 +26,76 @@ import 'core/utils/app_info.dart';
 import 'firebase_options.dart';
 import 'presentation/auth/screens/authed_bootstrap.dart';
 import 'presentation/auth/screens/login_screen.dart';
-import 'presentation/common/widgets/radius_toast.dart';
 import 'providers/core_providers.dart';
 
-final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
-GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =GlobalKey<ScaffoldMessengerState>();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e, s) {
+    // Missing/unbundled .env asset — this is the #1 candidate for a
+    // release-only crash if `.env` isn't declared under pubspec.yaml's
+    // flutter: assets: list. Log it and fall through to the missing-config
+    // screen instead of crashing on a blank screen.
+    AppLogger.fatal('Failed to load .env', error: e, stackTrace: s);
+    runApp(MissingConfigApp(missingKeys: const ['(.env failed to load)']));
+    return;
+  }
 
-  // Env has no fallbacks, so bail out here with a readable screen instead of
-  // letting Supabase.initialize throw on an empty URL.
   if (!Env.isConfigured) {
     runApp(MissingConfigApp(missingKeys: Env.missingKeys));
     return;
   }
 
-  await Supabase.initialize(
-    url: Env.supabaseUrl,
-    anonKey: Env.supabaseAnonKey,
-  );
+  try {
+    await Supabase.initialize(
+      url: Env.supabaseUrl,
+      anonKey: Env.supabaseAnonKey,
+    );
+  } catch (e, s) {
+    AppLogger.fatal('Supabase initialization failed', error: e, stackTrace: s);
+    runApp(MissingConfigApp(missingKeys: const ['(Supabase init failed)']));
+    return;
+  }
 
-
-  // 1. Initialize Firebase
   final isFirebaseInitialized = await initializeFirebaseWithFallback();
-
-  // 2. If it failed (returned false), the fallback UI is already running.
-  // We just return to stop the rest of the app from executing.
   if (!isFirebaseInitialized) return;
 
-
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  await MobileAds.instance.initialize(); // ✅ Initialize AdMob SDK
-  // ✅ Fetch package/build info once, globally, before the app renders
-  await AppInfo.init();
 
-  // ✅ Wire up Crashlytics/Analytics config and global error handlers.
-  // NOTE: this was previously defined but never called — none of the
-  // installer-store detection or FlutterError/PlatformDispatcher handlers
-  // below were actually active until this call was added.
+  try {
+    await MobileAds.instance.initialize();
+  } catch (e, s) {
+    // Don't let AdMob init failure take down the whole app — ads are
+    // non-critical; log and continue.
+    AppLogger.e('MobileAds initialization failed', error: e, stackTrace: s);
+  }
+
+  try {
+    await AppInfo.init();
+  } catch (e, s) {
+    AppLogger.e('AppInfo.init failed', error: e, stackTrace: s);
+  }
+
   await configureCrashlyticsAndAnalytics();
 
-  await NotificationHelper.initCore(
-    onNotificationTap: (data) {
-      AppLogger.i('Notification tapped: $data');
-      PushDeepLinks.receive(data);
-    },
-    onDataMessage: (data) {
-      AppLogger.i('Data message received: $data');
-    },
-  );
-
+  try {
+    await NotificationHelper.initCore(
+      onNotificationTap: (data) {
+        AppLogger.i('Notification tapped: $data');
+        PushDeepLinks.receive(data);
+      },
+      onDataMessage: (data) {
+        AppLogger.i('Data message received: $data');
+      },
+    );
+  } catch (e, s) {
+    AppLogger.e('NotificationHelper.initCore failed', error: e, stackTrace: s);
+  }
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -100,7 +116,6 @@ Future<bool> initializeFirebaseWithFallback() async {
   } catch (e, s) {
     AppLogger.fatal('Firebase initialization failed', error: e, stackTrace: s);
 
-    // Run a fallback UI instead of crashing to a blank screen
     runApp(
       const MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -132,7 +147,6 @@ bool _isHandledImageLoadError(FlutterErrorDetails details) {
 
 Future<void> configureCrashlyticsAndAnalytics() async {
   if (kDebugMode) {
-    // 🛠️ DEBUG MODE: Turn off Analytics globally
     await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
 
     if (!kIsWeb) {
@@ -159,125 +173,113 @@ Future<void> configureCrashlyticsAndAnalytics() async {
         error: error,
         stackTrace: stack,
       );
-      return false; // Returning false tells Flutter to print it normally to the console
+      return false;
     };
   } else {
-    // 🚀 LIVE/RELEASE MODE
     if (!kIsWeb) {
-      // 📊 FETCH INSTALLER SOURCE METADATA
-      final PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      final store = packageInfo.installerStore ?? 'unknown_or_sideloaded';
-
-      // Log the installation source to Crashlytics
-      await FirebaseCrashlytics.instance.setCustomKey('installer_store', store);
-
-      // --- CRASHLYTICS CONFIGURATION ---
-      // Evaluates EVERY known platform, native package installer, store, browser, and sharing ecosystem
-      final bool isFromOfficialStoreCrashAnalytics =
-      (
-          // 🍏 Apple Ecosystem
-          store == 'com.apple' || // Apple App Store (iOS/macOS)
-              store == 'com.apple.testflight' || // Apple TestFlight QA Tracks
-              store ==
-                  'com.apple.simulator' || // iOS Mac Core Simulator Environments
-              // 🤖 Core Google / Android Systems
-              store ==
-                  'com.android.vending' || // Google Play Store (Production & Closed Tracks)
-              store ==
-                  'com.google.android.packageinstaller' || // Android OS Standard Manual Package Installer
-              store ==
-                  'com.android.packageinstaller' || // Native Package Installer (Older Android AOSP Versions)
-              store ==
-                  'adb' || // 🛠️ Flutter build apk --release / USB Debugging fallback installer ID
-              // 📦 QA Testing, Cloud Storage & File Sharing Hubs
-              store ==
-                  'com.google.firebase.appdistribution' || // Firebase App Distribution Native App Hook
-              store ==
-                  'com.microsoft.appcenter' || // Microsoft Visual Studio App Center Client
-              store == 'com.dropbox.android' || // 📦 Dropbox Shared Link Downloads
-              store ==
-                  'com.google.android.apps.docs' || // 📦 Google Drive Shared Link Downloads
-              store ==
-                  'com.microsoft.skydrive' || // 📦 Microsoft OneDrive Shared Link Downloads
-              store ==
-                  'com.lenovo.anyshare.gps' || // 📳 SHAREit P2P Local Transfer Tool
-              store == 'com.xender' || // 📳 Xender P2P Local Transfer Tool
-              store ==
-                  'com.google.android.apps.nbu.files' || // 📁 Files by Google (Local storage installation)
-              // 💬 Communication & Messenger Apps (Direct Chat Attachment Installs)
-              store == 'com.whatsapp' || // 🟢 WhatsApp Standard Messenger
-              store == 'com.whatsapp.w4b' || // 🟢 WhatsApp Business Edition
-              store ==
-                  'org.telegram.messenger' || // 🔵 Telegram Messenger (Official Google Play Build)
-              store ==
-                  'org.telegram.messenger.web' || // 🔵 Telegram Direct APK Distribution Build
-              store ==
-                  'org.thoughtcrime.securesms' || // 🟡 Signal Private Messenger
-              store == 'com.facebook.orca' || // 🔵 Meta Messenger
-              // 🏭 Global OEM Hardware Manufacturer Storefronts
-              store == 'com.sec.android.app.samsungapps' || // Samsung Galaxy Store
-              store == 'com.xiaomi.mipicks' || // Xiaomi GetApps Store
-              store == 'com.huawei.appmarket' || // Huawei AppGallery
-              store == 'com.oppo.market' || // OPPO App Market
-              store == 'com.vivo.appstore' || // VIVO App Store
-              store ==
-                  'com.amazon.venezia' || // Amazon Appstore (Kindle Fire & Android Engine)
-              store == 'com.lenovo.leos.appstore' || // Lenovo App Center
-              store == 'com.htc.market' || // HTC BlinkFeed Market Hook
-              store == 'co.asustek.appmarket' || // ASUS ZenUI App Store
-              // 🌐 Major Android Mobile Web Browsers (Direct APK Download Handlers)
-              store == 'com.android.chrome' || // Google Chrome Mobile
-              store == 'com.sec.android.app.sbrowser' || // Samsung Internet Browser
-              store == 'org.mozilla.firefox' || // Mozilla Firefox Android
-              store == 'com.opera.browser' || // Opera Mobile Web Browser
-              store == 'com.microsoft.emmx' || // Microsoft Edge Mobile Android
-              store == 'com.brave.browser' || // Brave Privacy Web Browser
-              store == 'com.ucmobile.intl' || // UC Browser International Engine
-              store ==
-                  'com.duckduckgo.mobile.android' || // DuckDuckGo Mobile Browser
-              store ==
-                  'com.vivaldi.browser' // Vivaldi Web Engine for Android
-      );
-
-      if (isFromOfficialStoreCrashAnalytics) {
-        await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
-          true,
-        );
-        AppLogger.i(
-          "Crashlytics actively enabled for authorized store/testing ($store).",
-        );
-      } else {
-        await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
-          false,
-        );
-        AppLogger.i("Crashlytics disabled for unauthorized sideload ($store).");
+      String store = 'unknown_or_sideloaded';
+      try {
+        final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+        store = packageInfo.installerStore ?? 'unknown_or_sideloaded';
+      } catch (e, s) {
+        // PackageInfo can throw on some OEM/release configurations —
+        // don't let installer-source detection crash the whole app.
+        AppLogger.e('PackageInfo.fromPlatform failed', error: e, stackTrace: s);
       }
 
-      // --- ANALYTICS CONFIGURATION ---
-      final bool isFromOfficialStoreFirebaseAnalytics =
-      (store == 'com.android.vending' || // Google Play Store
-          store == 'com.apple' || // Apple App Store
-          store == 'com.sec.android.app.samsungapps' || // Samsung Galaxy Store
-          store == 'com.xiaomi.mipicks' || // Xiaomi GetApps Store
-          store == 'com.huawei.appmarket' || // Huawei AppGallery
-          store == 'com.amazon.venezia' || // Amazon Appstore
-          store == 'com.oppo.market' || // OPPO App Market
-          store ==
-              'com.vivo.appstore' // Vivo App Store
+      try {
+        await FirebaseCrashlytics.instance.setCustomKey('installer_store', store);
+      } catch (e, s) {
+        AppLogger.e('setCustomKey failed', error: e, stackTrace: s);
+      }
+
+      final bool isFromOfficialStoreCrashAnalytics = (
+          store == 'com.apple' ||
+              store == 'com.apple.testflight' ||
+              store == 'com.apple.simulator' ||
+              store == 'com.android.vending' ||
+              store == 'com.google.android.packageinstaller' ||
+              store == 'com.android.packageinstaller' ||
+              store == 'adb' ||
+              store == 'com.google.firebase.appdistribution' ||
+              store == 'com.microsoft.appcenter' ||
+              store == 'com.dropbox.android' ||
+              store == 'com.google.android.apps.docs' ||
+              store == 'com.microsoft.skydrive' ||
+              store == 'com.lenovo.anyshare.gps' ||
+              store == 'com.xender' ||
+              store == 'com.google.android.apps.nbu.files' ||
+              store == 'com.whatsapp' ||
+              store == 'com.whatsapp.w4b' ||
+              store == 'org.telegram.messenger' ||
+              store == 'org.telegram.messenger.web' ||
+              store == 'org.thoughtcrime.securesms' ||
+              store == 'com.facebook.orca' ||
+              store == 'com.sec.android.app.samsungapps' ||
+              store == 'com.xiaomi.mipicks' ||
+              store == 'com.huawei.appmarket' ||
+              store == 'com.oppo.market' ||
+              store == 'com.vivo.appstore' ||
+              store == 'com.amazon.venezia' ||
+              store == 'com.lenovo.leos.appstore' ||
+              store == 'com.htc.market' ||
+              store == 'co.asustek.appmarket' ||
+              store == 'com.android.chrome' ||
+              store == 'com.sec.android.app.sbrowser' ||
+              store == 'org.mozilla.firefox' ||
+              store == 'com.opera.browser' ||
+              store == 'com.microsoft.emmx' ||
+              store == 'com.brave.browser' ||
+              store == 'com.ucmobile.intl' ||
+              store == 'com.duckduckgo.mobile.android' ||
+              store == 'com.vivaldi.browser'
       );
-      if (isFromOfficialStoreFirebaseAnalytics) {
-        await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
-        AppLogger.i(
-          "App installed from official store ($store). Analytics Enabled.",
+
+      try {
+        await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+          isFromOfficialStoreCrashAnalytics,
         );
-      } else {
-        await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
         AppLogger.i(
-          "App sideloaded or from testing/browser ($store). Analytics Disabled.",
+          isFromOfficialStoreCrashAnalytics
+              ? "Crashlytics actively enabled for authorized store/testing ($store)."
+              : "Crashlytics disabled for unauthorized sideload ($store).",
+        );
+      } catch (e, s) {
+        AppLogger.e(
+          'setCrashlyticsCollectionEnabled failed',
+          error: e,
+          stackTrace: s,
         );
       }
 
-      // --- ERROR ROUTING ---
+      final bool isFromOfficialStoreFirebaseAnalytics = (
+          store == 'com.android.vending' ||
+              store == 'com.apple' ||
+              store == 'com.sec.android.app.samsungapps' ||
+              store == 'com.xiaomi.mipicks' ||
+              store == 'com.huawei.appmarket' ||
+              store == 'com.amazon.venezia' ||
+              store == 'com.oppo.market' ||
+              store == 'com.vivo.appstore'
+      );
+
+      try {
+        await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+          isFromOfficialStoreFirebaseAnalytics,
+        );
+        AppLogger.i(
+          isFromOfficialStoreFirebaseAnalytics
+              ? "App installed from official store ($store). Analytics Enabled."
+              : "App sideloaded or from testing/browser ($store). Analytics Disabled.",
+        );
+      } catch (e, s) {
+        AppLogger.e(
+          'setAnalyticsCollectionEnabled failed',
+          error: e,
+          stackTrace: s,
+        );
+      }
+
       FlutterError.onError = (FlutterErrorDetails details) {
         if (_isHandledImageLoadError(details)) return;
         FirebaseCrashlytics.instance.recordFlutterFatalError(details);
@@ -285,17 +287,14 @@ Future<void> configureCrashlyticsAndAnalytics() async {
 
       PlatformDispatcher.instance.onError = (error, stack) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return true; // Mark as handled
+        return true;
       };
     } else {
-      // --- WEB RELEASE CONFIG ---
       AppLogger.i("Running on Web Release: Firebase Crashlytics is bypassed.");
 
-      // Web doesn't have an installer store, so we simply enable Analytics directly.
       await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
       AppLogger.i("Analytics Enabled for Web Release.");
 
-      // Basic error fallbacks for Web Release since Crashlytics is bypassed
       FlutterError.onError = (FlutterErrorDetails details) {
         if (_isHandledImageLoadError(details)) return;
         AppLogger.e("🔴 WEB FLUTTER UI ERROR CAUGHT:\n${details.exception}");
@@ -307,7 +306,7 @@ Future<void> configureCrashlyticsAndAnalytics() async {
           error: error,
           stackTrace: stack,
         );
-        return true; // Mark as handled
+        return true;
       };
     }
   }
@@ -319,52 +318,44 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ScreenUtilInit(
-        designSize: const Size(390, 844),
-        minTextAdapt: true,
-        splitScreenMode: true,
-        builder: (context, child) {
-    return MaterialApp.router(
-      title: AppConstants.appName,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ref.watch(themeModeProvider),
-      scaffoldMessengerKey: radiusMessengerKey,
-      routerConfig: appRouter,
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
       builder: (context, child) {
-        Widget app = child!;
+        return MaterialApp.router(
+          title: AppConstants.appName,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ref.watch(themeModeProvider),
+          scaffoldMessengerKey: scaffoldMessengerKey,
+          routerConfig: appRouter,
+          builder: (context, child) {
+            Widget app = child!;
 
-        if (defaultTargetPlatform == TargetPlatform.android) {
-          app = SafeArea(top: false, child: app);
-        }
+            if (defaultTargetPlatform == TargetPlatform.android) {
+              app = SafeArea(top: false, child: app);
+            }
 
-        return PaletteScope( child: app,);
+            return PaletteScope(child: app);
+          },
+        );
       },
     );
-  });
   }
 }
 
-/// Decides the launch route: an existing session boots into the app (loading
-/// the domain user), otherwise the login screen.
-///
-/// Watching the auth stream — rather than reading `currentSession` once — is
-/// what makes sign-out and token expiry land the user back on login instead of
-/// leaving a dead screen behind.
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Rebuilds on every sign-in / sign-out / token refresh.
     ref.watch(authStateProvider);
     final session = Supabase.instance.client.auth.currentSession;
     return session != null ? const AuthedBootstrap() : const LoginScreen();
   }
 }
 
-/// Stands in for the whole app when `.env` wasn't supplied, so the failure is
-/// an obvious screen naming the missing keys instead of a cryptic crash.
 class MissingConfigApp extends StatelessWidget {
   const MissingConfigApp({super.key, required this.missingKeys});
 
@@ -387,8 +378,7 @@ class MissingConfigApp extends StatelessWidget {
                 children: [
                   Icon(Icons.key_off, size: 48, color: AppColors.iconMuted),
                   const SizedBox(height: 16),
-                  Text('Environment not configured',
-                      style: AppTextStyles.title),
+                  Text('Environment not configured', style: AppTextStyles.title),
                   const SizedBox(height: 12),
                   Text(
                     'Missing: ${missingKeys.join(', ')}',
@@ -398,7 +388,7 @@ class MissingConfigApp extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     'Copy .env.example to .env, fill it in, then relaunch with\n'
-                    'flutter run --dart-define-from-file=.env',
+                        'flutter run --dart-define-from-file=.env',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.caption,
                   ),

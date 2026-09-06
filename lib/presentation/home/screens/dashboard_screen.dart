@@ -1,13 +1,18 @@
 import 'dart:async';
 import 'package:dating_app/core/constants/app_constants.dart';
 import 'package:dating_app/core/constants/app_string.dart';
+import 'package:dating_app/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/ads/app_open/app_open_ad_provider.dart';
 import '../../../core/ads/banner/banner_ad_widget.dart';
 import '../../../core/ads/rewarded/rewarded_unlock_type.dart';
+import '../../../core/logger/app_logger.dart';
 import '../../../core/notification/push_deep_link.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/errors/app_exceptions.dart';
@@ -20,6 +25,7 @@ import '../../../providers/realtime_provider.dart';
 import '../../../shared/widgets/dialogs/app_dialogs.dart';
 import '../../common/widgets/widgets.dart';
 import '../../explore/screens/explore_screen.dart';
+import '../../notifications/viewmodel/providers/notification_provider/notification_provider.dart';
 import '../widgets/discovery_filter_sheet.dart';
 import '../widgets/match_celebration.dart';
 import '../widgets/premium_filter_prompt.dart';
@@ -506,15 +512,20 @@ class _RadarTab extends ConsumerWidget {
   }
 }
 
-class RadarHeader extends StatelessWidget {
+class RadarHeader extends ConsumerWidget {
   const RadarHeader({super.key, this.name, this.city});
 
   final String? name;
   final String? city;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final place = (city ?? '').trim();
+
+    // .valueOrNull: while loading or on error we simply don't show a badge
+    // rather than flashing a stale/fake number.
+    final unreadCount =
+        ref.watch(unreadNotificationCountProvider).valueOrNull ?? 0;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
@@ -547,6 +558,58 @@ class RadarHeader extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           const _FilterButton(),
+          spacerW(5),
+
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              AppLogger.d("Navigating to notifications...");
+              context.push(AppRoutes.notifications);
+            },
+            icon: SizedBox(
+              width: 30.w,
+              height: 30.h,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(Icons.notifications, size: 30.r),
+                  if (unreadCount > 0)
+                    Positioned(
+                      top: 2.h,
+                      right: 2.w,
+                      child: Container(
+                        padding: EdgeInsets.all(3.r),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.whiteColor,
+                            width: 1.5.w,
+                          ),
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 16.r,
+                          minHeight: 16.r,
+                        ),
+                        child: Center(
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              height: 1, // Ensures text is perfectly centered
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

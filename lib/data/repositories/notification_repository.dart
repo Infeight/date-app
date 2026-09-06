@@ -37,7 +37,7 @@ class NotificationRepository {
         'token': token,
         'platform': _platform,
         if (AppInfo.version.isNotEmpty) 'appVersion': AppInfo.version,
-        if (timezone != null) 'timezone': timezone,
+        'timezone': ?timezone,
       },
     );
   }

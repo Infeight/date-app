@@ -19,14 +19,8 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-
-
     defaultConfig {
-        // Must match the Play listing and the App Store bundle id: a store
-        // review that sees three different names for one product stalls.
         applicationId = "com.cozune.app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -34,10 +28,22 @@ android {
         multiDexEnabled = true
     }
 
+    signingConfigs {
+        getByName("debug") {
+            // Uses the default debug keystore Flutter/Android Studio
+            // generates automatically at ~/.android/debug.keystore —
+            // fine for local testing, NOT for a real Play Store release.
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -52,7 +58,6 @@ kotlin {
 flutter {
     source = "../.."
 }
-
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")

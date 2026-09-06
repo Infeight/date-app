@@ -8,17 +8,6 @@ class DiscoveryRepository {
   DiscoveryRepository(this._api);
 
   final ApiClient _api;
-
-  /// `GET /discovery/nearby`. Throws [EntitlementRequiredException] (402) when
-  /// out of free allowance + credits, or [BadRequestException] (400) when the
-  /// user hasn't set a location. `verifiedOnly`/`onlineOnly` are premium-only
-  /// (403 otherwise).
-  ///
-  /// The order is the server's: 60% proximity, 40% presence and last seen. A
-  /// page is a slice of one ranking held server-side for the length of a
-  /// scroll, so page 2 continues page 1 rather than re-sorting underneath it.
-  ///
-  /// Thirty per page — ten rows of the three-column grid.
   Future<NearbyPage> nearby({
     int page = 1,
     int limit = 30,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../main.dart';
 
 /// The app-wide messenger, attached to `MaterialApp.scaffoldMessengerKey`.
 ///
@@ -9,8 +10,7 @@ import '../../../core/constants/app_text_styles.dart';
 /// callback, a socket handler — still confirm what it just did. Screens should
 /// keep using [showRadiusToast] with their own context; this is the fallback the
 /// context-free path uses.
-final GlobalKey<ScaffoldMessengerState> radiusMessengerKey =
-    GlobalKey<ScaffoldMessengerState>();
+
 
 /// How loud a toast is. The default carries no colour of its own — most
 /// confirmations are unremarkable and should not compete with the screen.
@@ -43,18 +43,18 @@ void showRadiusToast(
   // the case for anything shown above the navigator, and for a context that has
   // already been unmounted by the time the async call it triggered returns.
   final messenger =
-      ScaffoldMessenger.maybeOf(context) ?? radiusMessengerKey.currentState;
+      ScaffoldMessenger.maybeOf(context) ?? scaffoldMessengerKey.currentState;
   _show(messenger, message, tone);
 }
 
-/// Toast without a [BuildContext], via [radiusMessengerKey]. Silently does
+/// Toast without a [BuildContext], via [scaffoldMessengerKey]. Silently does
 /// nothing before the app is mounted — a dropped confirmation is not worth a
 /// crash.
 void showRadiusToastGlobal(
   String message, {
   ToastTone tone = ToastTone.neutral,
 }) =>
-    _show(radiusMessengerKey.currentState, message, tone);
+    _show(scaffoldMessengerKey.currentState, message, tone);
 
 void _show(ScaffoldMessengerState? messenger, String message, ToastTone tone) {
   if (messenger == null) return;

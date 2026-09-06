@@ -155,6 +155,21 @@ abstract final class ApiConstants {
   /// DELETE — removes the thread from MY inbox only.
   static String conversation(String conversationId) =>
       '/messaging/conversations/$conversationId';
+
+
+  // Add these inside your existing ApiConstants class, alongside
+// discoveryNearby / discoveryNearbyCount / entitlementsMe.
+
+  /// `GET /notifications` — paginated, date-grouped notification feed.
+  static const String notifications = '/notifications';
+
+  /// `GET /notification-count` — lightweight unread badge count, safe to
+  /// poll frequently since it skips the full feed payload.
+  static const String notificationCount = '/notification-count';
+
+  /// `PATCH /notifications/read-all` — marks every notification as read.
+  /// Returns `data: null`, so the repository call resolves to `void`.
+  static const String notificationsReadAll = '/notifications/read-all';
 }
 
 /// Socket.io namespaces and event names (see backend presence/messaging
