@@ -6,9 +6,6 @@ import '../../models/notification_model.dart';
 import '../../viewmodel/providers/notification_provider/notification_provider.dart';
 import '../../viewmodel/providers/notification_provider/notification_state.dart';
 
-/// Small helper so every call site converts the same way instead of some
-/// places remembering `.toLocal()` and others forgetting. Safe to call on
-/// a naive (non-UTC-flagged) DateTime too — `.toLocal()` is a no-op there.
 extension _LocalDateTime on DateTime? {
   DateTime? get orNullLocal => this?.toLocal();
 }

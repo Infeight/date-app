@@ -1,6 +1,6 @@
 enum RewardedUnlockType {
   getMoreLikes,
-  unlockChatToMessage,
+  unlockChat,
   getMoreProfiles,
   seeWhoLikedYou,
   unlockNext30Profile,

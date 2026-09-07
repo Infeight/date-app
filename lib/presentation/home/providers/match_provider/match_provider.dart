@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../core/errors/app_exceptions.dart';
-import '../data/repositories/ads_repository.dart';
-import '../data/models/discovery_user_model.dart';
-import '../data/models/entitlements_model.dart';
-import '../data/models/match_model.dart';
-import '../data/models/paginated.dart';
-import 'core_providers.dart';
+import '../../../../core/errors/app_exceptions.dart';
+import '../../../../data/repositories/ads_repository.dart';
+import '../../../../data/models/discovery_user_model.dart';
+import '../../../../data/models/entitlements_model.dart';
+import '../../../../data/models/match_model.dart';
+import '../../../../data/models/paginated.dart';
+import '../../models/unlike_result_model.dart';
+import '../../../../providers/core_providers.dart';
 
 /// The lowest and highest ages the range slider offers. [kAgeFilterMax] is the
 /// "and above" notch — the backend drops the upper bound at that value.
@@ -56,11 +56,11 @@ class DiscoveryFilter {
   /// and to strip these before sending for a free member.
   bool get usesPremiumFilters =>
       verifiedOnly ||
-      onlineOnly ||
-      recentlyActive ||
-      relationshipStatus.isNotEmpty ||
-      personalityTags.isNotEmpty ||
-      preferenceTags.isNotEmpty;
+          onlineOnly ||
+          recentlyActive ||
+          relationshipStatus.isNotEmpty ||
+          personalityTags.isNotEmpty ||
+          preferenceTags.isNotEmpty;
 
   /// Everything except the intent chips, which live outside the sheet.
   DiscoveryFilter clearedToDefaults() => DiscoveryFilter(intent: intent);
@@ -68,11 +68,11 @@ class DiscoveryFilter {
   /// Drop premium-only selections, so a lapsed member's saved filters don't
   /// turn every request into a 403.
   DiscoveryFilter withoutPremium() => DiscoveryFilter(
-        intent: intent,
-        genders: genders,
-        minAge: minAge,
-        maxAge: maxAge,
-      );
+    intent: intent,
+    genders: genders,
+    minAge: minAge,
+    maxAge: maxAge,
+  );
 
   DiscoveryFilter copyWith({
     String? intent,
@@ -106,53 +106,53 @@ class DiscoveryFilter {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is DiscoveryFilter &&
-          other.intent == intent &&
-          listEquals(other.genders, genders) &&
-          other.minAge == minAge &&
-          other.maxAge == maxAge &&
-          other.verifiedOnly == verifiedOnly &&
-          other.onlineOnly == onlineOnly &&
-          other.recentlyActive == recentlyActive &&
-          listEquals(other.relationshipStatus, relationshipStatus) &&
-          listEquals(other.personalityTags, personalityTags) &&
-          listEquals(other.preferenceTags, preferenceTags);
+          other is DiscoveryFilter &&
+              other.intent == intent &&
+              listEquals(other.genders, genders) &&
+              other.minAge == minAge &&
+              other.maxAge == maxAge &&
+              other.verifiedOnly == verifiedOnly &&
+              other.onlineOnly == onlineOnly &&
+              other.recentlyActive == recentlyActive &&
+              listEquals(other.relationshipStatus, relationshipStatus) &&
+              listEquals(other.personalityTags, personalityTags) &&
+              listEquals(other.preferenceTags, preferenceTags);
 
   @override
   int get hashCode => Object.hash(
-        intent,
-        Object.hashAll(genders),
-        minAge,
-        maxAge,
-        verifiedOnly,
-        onlineOnly,
-        recentlyActive,
-        Object.hashAll(relationshipStatus),
-        Object.hashAll(personalityTags),
-        Object.hashAll(preferenceTags),
-      );
+    intent,
+    Object.hashAll(genders),
+    minAge,
+    maxAge,
+    verifiedOnly,
+    onlineOnly,
+    recentlyActive,
+    Object.hashAll(relationshipStatus),
+    Object.hashAll(personalityTags),
+    Object.hashAll(preferenceTags),
+  );
 }
 
 final discoveryFilterProvider =
-    StateProvider<DiscoveryFilter>((ref) => const DiscoveryFilter());
+StateProvider<DiscoveryFilter>((ref) => const DiscoveryFilter());
 
 /// Live match count for a candidate filter set — the number on the sheet's
 /// "Show N people" button. Family-keyed on the draft filter so each edit gets
 /// its own request, and autoDispose so abandoned drafts don't linger.
 final nearbyCountProvider =
-    FutureProvider.autoDispose.family<int, DiscoveryFilter>((ref, filter) {
+FutureProvider.autoDispose.family<int, DiscoveryFilter>((ref, filter) {
   return ref.watch(discoveryRepositoryProvider).nearbyCount(
-        intent: filter.intent,
-        genders: filter.genders,
-        minAge: filter.isFullAgeRange ? null : filter.minAge,
-        maxAge: filter.isFullAgeRange ? null : filter.maxAge,
-        verifiedOnly: filter.verifiedOnly,
-        onlineOnly: filter.onlineOnly,
-        recentlyActive: filter.recentlyActive,
-        relationshipStatus: filter.relationshipStatus,
-        personalityTags: filter.personalityTags,
-        preferenceTags: filter.preferenceTags,
-      );
+    intent: filter.intent,
+    genders: filter.genders,
+    minAge: filter.isFullAgeRange ? null : filter.minAge,
+    maxAge: filter.isFullAgeRange ? null : filter.maxAge,
+    verifiedOnly: filter.verifiedOnly,
+    onlineOnly: filter.onlineOnly,
+    recentlyActive: filter.recentlyActive,
+    relationshipStatus: filter.relationshipStatus,
+    personalityTags: filter.personalityTags,
+    preferenceTags: filter.preferenceTags,
+  );
 });
 
 /// The nearby feed with pagination + gate handling. When the server refuses a
@@ -252,9 +252,9 @@ class NearbyNotifier extends AsyncNotifier<NearbyState> {
   /// same person twice" is not a bug anybody reports as a caching problem — so
   /// the client refuses the duplicate rather than trusting the seam.
   static List<DiscoveryCard> _appendNew(
-    List<DiscoveryCard> existing,
-    List<DiscoveryCard> incoming,
-  ) {
+      List<DiscoveryCard> existing,
+      List<DiscoveryCard> incoming,
+      ) {
     final seen = {for (final card in existing) card.id};
     return [
       ...existing,
@@ -276,16 +276,16 @@ class NearbyNotifier extends AsyncNotifier<NearbyState> {
 }
 
 final nearbyProvider =
-    AsyncNotifierProvider<NearbyNotifier, NearbyState>(NearbyNotifier.new);
+AsyncNotifierProvider<NearbyNotifier, NearbyState>(NearbyNotifier.new);
 
 /// Premium status + credits + free daily allowances (the "Discovery Limit" UI).
 final entitlementsProvider = FutureProvider.autoDispose<Entitlements>(
-  (ref) => ref.watch(discoveryRepositoryProvider).entitlements(),
+      (ref) => ref.watch(discoveryRepositoryProvider).entitlements(),
 );
 
 /// "Liked you" — gated grid.
 final likedYouProvider = FutureProvider.autoDispose<LikedYouPage>(
-  (ref) => ref.watch(matchRepositoryProvider).likedYou(),
+      (ref) => ref.watch(matchRepositoryProvider).likedYou(),
 );
 
 /// Matches — the Mutual tab.
@@ -293,14 +293,14 @@ final likedYouProvider = FutureProvider.autoDispose<LikedYouPage>(
 /// Never gated, so unlike [likedYouProvider] there is no paywall state to
 /// model here: it either loaded or it didn't.
 final mutualLikesProvider =
-    FutureProvider.autoDispose<PageResult<MutualCard>>(
-  (ref) => ref.watch(matchRepositoryProvider).mutual(),
+FutureProvider.autoDispose<PageResult<MutualCard>>(
+      (ref) => ref.watch(matchRepositoryProvider).mutual(),
 );
 
 /// People I favourited.
 final favoritesProvider =
-    FutureProvider.autoDispose<PageResult<LikeCard>>(
-  (ref) => ref.watch(matchRepositoryProvider).favorites(),
+FutureProvider.autoDispose<PageResult<LikeCard>>(
+      (ref) => ref.watch(matchRepositoryProvider).favorites(),
 );
 
 /// The match waiting to be celebrated, or null.
@@ -331,7 +331,7 @@ class MatchCelebrationNotifier extends Notifier<MatchCelebration?> {
 }
 
 final matchCelebrationProvider =
-    NotifierProvider<MatchCelebrationNotifier, MatchCelebration?>(
+NotifierProvider<MatchCelebrationNotifier, MatchCelebration?>(
   MatchCelebrationNotifier.new,
 );
 
@@ -346,6 +346,13 @@ class LikeActions {
 
   Future<void> unreact(String userId) =>
       ref.read(matchRepositoryProvider).unreact(userId);
+
+  /// Undo a like/favorite/pass. Distinct from [unreact]: the endpoint behind
+  /// this one also hands back the freshly recalculated quota and whether the
+  /// removed reaction had formed a match, which the profile sheet's unlike
+  /// flow needs in the same round trip.
+  Future<UnlikeResult> unlike(String userId) =>
+      ref.read(matchRepositoryProvider).unlike(userId);
 }
 
 final likeActionsProvider = Provider<LikeActions>((ref) => LikeActions(ref));
@@ -363,9 +370,9 @@ class AdActions {
   /// Returns the credits granted — zero when the impression was a replay.
   Future<int> watchToUnlock({String? placement}) async {
     final reward = await ref.read(adsRepositoryProvider).claimReward(
-          idempotencyKey: AdsRepository.newIdempotencyKey(),
-          placement: placement,
-        );
+      idempotencyKey: AdsRepository.newIdempotencyKey(),
+      placement: placement,
+    );
     ref.invalidate(entitlementsProvider);
     ref.invalidate(likedYouProvider);
     ref.read(nearbyProvider.notifier).refresh();

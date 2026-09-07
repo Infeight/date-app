@@ -2,6 +2,7 @@ import 'package:dating_app/core/theme/app_theme.dart';
 import 'package:dating_app/data/models/match_model.dart';
 import 'package:dating_app/data/models/profile_model.dart';
 import 'package:dating_app/data/repositories/match_repository.dart';
+import 'package:dating_app/presentation/home/models/profile_seed.dart';
 import 'package:dating_app/presentation/home/screens/profile_detail_sheet.dart';
 import 'package:dating_app/providers/core_providers.dart';
 import 'package:dating_app/providers/profile_provider.dart';

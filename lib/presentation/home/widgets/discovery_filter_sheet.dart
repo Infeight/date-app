@@ -5,7 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/tag_categories.dart';
 import '../../../data/models/tag_model.dart';
-import '../../../providers/match_provider.dart';
+import '../providers/match_provider/match_provider.dart';
 import '../../../providers/profile_provider.dart';
 import '../screens/premium_screen.dart';
 

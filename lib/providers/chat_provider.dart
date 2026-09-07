@@ -4,7 +4,7 @@ import '../data/models/message_model.dart';
 import '../data/repositories/safety_repository.dart';
 import 'core_providers.dart';
 import 'explore_provider.dart';
-import 'match_provider.dart';
+import '../presentation/home/providers/match_provider/match_provider.dart';
 
 /// Inbox list for a given state tab (null = all, 'new_energy', 'vibing').
 class ConversationsNotifier

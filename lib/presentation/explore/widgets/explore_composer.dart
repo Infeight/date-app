@@ -7,6 +7,7 @@ import '../../../core/errors/app_exceptions.dart';
 import '../../../data/models/map_user_model.dart';
 import '../../../providers/chat_provider.dart';
 import '../../common/widgets/widgets.dart';
+import '../../home/models/profile_seed.dart';
 import '../../home/screens/profile_detail_sheet.dart';
 import '../../home/widgets/message_limit_paywall.dart';
 import 'explore_avatar.dart';

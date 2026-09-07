@@ -19,13 +19,16 @@ import '../../../core/errors/app_exceptions.dart';
 import '../../../data/models/message_model.dart';
 import '../../../providers/chat_provider.dart';
 import '../../../providers/core_providers.dart';
-import '../../../providers/match_provider.dart';
+import '../models/profile_seed.dart';
+import '../providers/match_provider/match_provider.dart';
 import '../../../providers/profile_provider.dart';
 import '../../../providers/realtime_provider.dart';
 import '../../../shared/widgets/dialogs/app_dialogs.dart';
 import '../../common/widgets/widgets.dart';
 import '../../explore/screens/explore_screen.dart';
 import '../../notifications/viewmodel/providers/notification_provider/notification_provider.dart';
+import '../models/like_quota_model.dart';
+import '../providers/like_quota_provider/like_quota_provider.dart';
 import '../widgets/discovery_filter_sheet.dart';
 import '../widgets/match_celebration.dart';
 import '../widgets/premium_filter_prompt.dart';
@@ -145,6 +148,7 @@ class _HomeScreenState extends ConsumerState<DashboardScreen>
     ref.invalidate(mutualLikesProvider);
     ref.read(unreadCountProvider.notifier).refresh();
     ref.read(meProvider.notifier).refresh();
+    ref.read(likeQuotaProvider.notifier).refresh();
   }
 
   @override
@@ -522,13 +526,12 @@ class RadarHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final place = (city ?? '').trim();
 
-    // .valueOrNull: while loading or on error we simply don't show a badge
-    // rather than flashing a stale/fake number.
     final unreadCount =
         ref.watch(unreadNotificationCountProvider).valueOrNull ?? 0;
+    final quota = ref.watch(likeQuotaProvider).valueOrNull ?? LikeQuota.empty;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      padding: const EdgeInsets.fromLTRB(15, 15, 15, 5),
       child: Row(
         children: [
           const RadarMark(size: 36),
@@ -544,22 +547,28 @@ class RadarHeader extends ConsumerWidget {
                       : 'Hey, $name 👋',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.title.copyWith(fontSize: 19),
+                  style: AppTextStyles.title.copyWith(fontSize: 18),
                 ),
                 if (place.isNotEmpty)
                   Text(
                     place,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.caption.copyWith(fontSize: 11.5),
+                    style: AppTextStyles.caption.copyWith(fontSize: 12),
                   ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          const _FilterButton(),
-          spacerW(5),
+          const SizedBox(width: 10),
 
+          _LikesChip(
+            remaining: quota.remaining,
+            unlimited: quota.unlimited,
+            onTap: () {
+              AppLogger.d("Navigating to likes...");
+              context.push(AppRoutes.notifications);
+            },
+          ),
           IconButton(
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -600,7 +609,7 @@ class RadarHeader extends ConsumerWidget {
                               color: Colors.white,
                               fontSize: 9,
                               fontWeight: FontWeight.w900,
-                              height: 1, // Ensures text is perfectly centered
+                              height: 1,
                             ),
                           ),
                         ),
@@ -610,7 +619,67 @@ class RadarHeader extends ConsumerWidget {
               ),
             ),
           ),
+          const _FilterButton(),
         ],
+      ),
+    );
+  }
+}
+
+class _LikesChip extends StatelessWidget {
+  const _LikesChip({
+    required this.remaining,
+    required this.unlimited,
+    required this.onTap,
+  });
+
+  final int remaining;
+  final bool unlimited;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final display = remaining > 99 ? '99+' : '$remaining';
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 30.h,
+        padding: EdgeInsets.symmetric(horizontal: 10.w),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF5F6D), Color(0xFFFF9A44)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF5F6D).withValues(alpha: 0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.favorite, size: 16.r, color: Colors.white),
+            spacerW(5),
+            if (unlimited)
+              Icon(Icons.all_inclusive, size: 16.r, color: Colors.white)
+            else
+              Text(
+                display,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

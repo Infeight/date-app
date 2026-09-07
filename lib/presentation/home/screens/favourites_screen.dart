@@ -1,12 +1,17 @@
+import 'package:dating_app/core/logger/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/ads/rewarded/rewarded_unlock_type.dart';
+import '../../../core/constants/app_string.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../data/models/match_model.dart';
-import '../../../providers/match_provider.dart';
+import '../models/profile_seed.dart';
+import '../providers/match_provider/match_provider.dart';
 import '../../../providers/realtime_provider.dart';
+import '../../../shared/widgets/dialogs/app_dialogs.dart';
 import '../../common/widgets/widgets.dart';
 import 'chat_detail_screen.dart';
 import 'profile_detail_sheet.dart';
@@ -275,7 +280,7 @@ class _MutualTab extends ConsumerWidget {
 }
 
 /// A match: their face, their name, and the two things you can do about it.
-class _MutualRow extends StatelessWidget {
+class _MutualRow extends ConsumerWidget {
   const _MutualRow({
     required this.match,
     required this.colorIndex,
@@ -304,27 +309,35 @@ class _MutualRow extends StatelessWidget {
     );
   }
 
-  /// Straight into the thread — existing or not. A match with nothing said yet
-  /// opens an empty conversation rather than sending them back to the profile
-  /// to find the composer.
-  void _openChat(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ChatDetailScreen(
-          conversationId: match.conversationId,
-          userId: match.user.id,
-          userName: _name,
-          userAge: match.user.age,
-          photoUrl: match.user.primaryPhotoUrl,
-          colorIndex: colorIndex,
-        ),
-      ),
+  Future<void> _openChat(BuildContext context, WidgetRef ref) async {
+    await AppDialogs.premiumOrAdDialog(
+      context: context,
+      ref: ref,
+      headingText: AppString.mutualChatPaywallTitle,
+      descriptionText: AppString.mutualChatPaywallDescription,
+      unlockType: RewardedUnlockType.unlockChat,
+      onAdEarned: () {
+        if (!context.mounted) return;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatDetailScreen(
+              conversationId: match.conversationId,
+              userId: match.user.id,
+              userName: _name,
+              userAge: match.user.age,
+              photoUrl: match.user.primaryPhotoUrl,
+              colorIndex: colorIndex,
+            ),
+          ),
+        );
+      },
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context,WidgetRef ref) {
     return Semantics(
       button: true,
       label: 'Match with $_name${online ? ', online now' : ''}',
@@ -372,7 +385,7 @@ class _MutualRow extends StatelessWidget {
               label: 'Message $_name',
               excludeSemantics: true,
               child: InkWell(
-                onTap: () => _openChat(context),
+                onTap: () => _openChat(context,ref),
                 borderRadius: BorderRadius.circular(999),
                 child: Container(
                   width: 40,

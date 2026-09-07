@@ -85,11 +85,21 @@ abstract final class ApiConstants {
   // ── Likes / Favorites / Liked-you ───────────────────────────────────────
   static const String likes = '/likes';
   static String likeUser(String userId) => '/likes/$userId';
+  static String unlikeUser(String userId) => '/likes/$userId/unlike';
   static const String likedYou = '/likes/liked-you';
   static const String favorites = '/likes/favorites';
 
   /// Matches. Deliberately ungated — see the endpoint's own docs.
   static const String mutualLikes = '/likes/mutual';
+
+  /// `GET` → my daily like allowance/usage; `POST .../quota/unlock` spends
+  /// an ad credit for [LikeQuota.likesPerAd] more likes.
+  static const String likesQuota = '/likes/quota';
+  static const String likesQuotaUnlock = '/likes/quota/unlock';
+
+  /// `POST` — reveals one blurred "liked you" card, spending an unlock credit.
+  static String likedYouUnlock(String userId) =>
+      '/likes/liked-you/$userId/unlock';
 
   // ── Push notifications ──────────────────────────────────────────────────
 
@@ -170,12 +180,15 @@ abstract final class ApiConstants {
   /// `PATCH /notifications/read-all` — marks every notification as read.
   /// Returns `data: null`, so the repository call resolves to `void`.
   static const String notificationsReadAll = '/notifications/read-all';
+
+
+
+
 }
 
 /// Socket.io namespaces and event names (see backend presence/messaging
 /// gateways). Payload shapes are documented on the socket services.
-class SocketConstants {
-  SocketConstants._();
+abstract final class SocketConstants {
 
   static const String presenceNamespace = '/presence';
   static const String chatNamespace = '/chat';

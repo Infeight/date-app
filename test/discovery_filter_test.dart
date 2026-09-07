@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dating_app/data/repositories/discovery_repository.dart';
-import 'package:dating_app/providers/match_provider.dart';
+import 'package:dating_app/presentation/home/providers/match_provider/match_provider.dart';
 
 void main() {
   group('DiscoveryRepository.nearbyQuery', () {

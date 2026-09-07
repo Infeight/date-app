@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../data/models/match_model.dart';
-import '../../../providers/match_provider.dart';
+import '../providers/match_provider/match_provider.dart';
 import '../../common/widgets/widgets.dart';
 import '../screens/chat_detail_screen.dart';
 

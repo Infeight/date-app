@@ -17,6 +17,7 @@ import '../../../providers/profile_provider.dart';
 import '../../../providers/chat_provider.dart';
 import '../../../providers/realtime_provider.dart';
 import '../../common/widgets/widgets.dart';
+import '../models/profile_seed.dart';
 import '../widgets/chat_actions_menu.dart';
 import '../widgets/message_limit_paywall.dart';
 import './profile_detail_sheet.dart';

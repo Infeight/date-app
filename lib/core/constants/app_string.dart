@@ -101,4 +101,9 @@ abstract final class AppString {
   static const String genericPaywallTitle = "Unlock This Feature";
   static const String genericPaywallDescription =
       "Upgrade to Premium for full access, or watch a short ad to continue.";
+
+  // Mutual Chat unlock paywall
+  static const String mutualChatPaywallTitle = "Unlock Mutual Chat";
+  static const String mutualChatPaywallDescription =
+      "Upgrade to Premium to chat with your mutual matches instantly, or watch a short ad to unlock this chat.";
 }

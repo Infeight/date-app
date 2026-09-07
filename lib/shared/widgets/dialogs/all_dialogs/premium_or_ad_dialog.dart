@@ -87,9 +87,14 @@ class _PremiumOrAdDialogState extends ConsumerState<PremiumOrAdDialog> {
     // (or SDK-equivalent) callback, not from onAdLoaded / a cached
     // instance / a dev stub.
     if (earned) {
-      AppLogger.d('[PremiumOrAdDialog] earned=true — calling onAdEarned and popping(true)');
-      widget.onAdEarned?.call();
+      // IMPORTANT: pop the dialog's own route FIRST, then invoke the
+      // caller's callback. If onAdEarned() pushes a new route (as
+      // _MutualRow._openChat does) before we pop, our pop below ends up
+      // popping that freshly-pushed route instead of the dialog,
+      // which immediately reverses the navigation the caller just did.
+      AppLogger.d('[PremiumOrAdDialog] earned=true — popping(true) then calling onAdEarned');
       context.pop(true);
+      widget.onAdEarned?.call();
       return;
     }
 

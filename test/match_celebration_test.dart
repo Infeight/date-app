@@ -1,7 +1,7 @@
 import 'package:dating_app/core/theme/app_theme.dart';
 import 'package:dating_app/data/models/match_model.dart';
 import 'package:dating_app/presentation/home/widgets/match_celebration.dart';
-import 'package:dating_app/providers/match_provider.dart';
+import 'package:dating_app/presentation/home/providers/match_provider/match_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

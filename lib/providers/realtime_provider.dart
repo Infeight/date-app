@@ -6,7 +6,7 @@ import '../data/services/chat_service.dart';
 import '../data/services/presence_service.dart';
 import 'chat_provider.dart';
 import 'core_providers.dart';
-import 'match_provider.dart';
+import '../presentation/home/providers/match_provider/match_provider.dart';
 
 /// The live `/presence` socket, connected with the current Supabase token and
 /// torn down when no longer needed.
