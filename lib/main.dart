@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dating_app/core/constants/app_constants.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -18,18 +20,21 @@ import 'core/logger/app_logger.dart';
 import 'core/notification/notification_helper.dart';
 import 'core/notification/push_deep_link.dart';
 import 'core/router/app_pages.dart';
+import 'core/security/security_breach_page.dart';
+import 'core/security/security_risk.dart';
+import 'core/security/security_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/palette_scope.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/utils/app_info.dart';
+import 'core/utils/app_snack_bar.dart';
 import 'firebase_options.dart';
-import 'presentation/auth/screens/authed_bootstrap.dart';
-import 'presentation/auth/screens/login_screen.dart';
-import 'providers/core_providers.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =GlobalKey<ScaffoldMessengerState>();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+List<SecurityRisk> _pendingSecurityRiskWarnings = [];
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,6 +69,8 @@ void main() async {
 
   final isFirebaseInitialized = await initializeFirebaseWithFallback();
   if (!isFirebaseInitialized) return;
+
+  await _runSecurityGate();
 
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
@@ -103,6 +110,52 @@ void main() async {
   ]);
 
   runApp(const ProviderScope(child: MyApp()));
+
+  // scaffoldMessengerKey isn't attached to a live ScaffoldMessenger until
+  // MyApp actually builds — showing a snackbar any earlier silently no-ops
+  // because scaffoldMessengerKey.currentState is still null. A post-frame
+  // callback guarantees the tree is mounted before we try.
+  if (_pendingSecurityRiskWarnings.isNotEmpty) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showSecurityRiskWarning(_pendingSecurityRiskWarnings);
+    });
+  }
+}
+
+Future<void> _runSecurityGate() async {
+  while (true) {
+    final result = await SecurityService.evaluate();
+    if (result.isSafe) {
+      _pendingSecurityRiskWarnings = result.risks;
+      return;
+    }
+
+    AppLogger.w('Security gate blocked launch. Risks: ${result.risks}');
+
+    final retry = Completer<void>();
+    runApp(
+      SecurityBreachPage(
+        risks: result.risks,
+        onRecheck: () {
+          if (!retry.isCompleted) retry.complete();
+        },
+      ),
+    );
+    await retry.future;
+    // loop back to re-evaluate; if still unsafe, screen re-renders
+    // with the freshly detected risks.
+  }
+}
+
+// Risk -> human-readable label mapping now lives in SecurityService,
+// since it's security domain logic, not app-bootstrap logic. main.dart
+// just asks SecurityService to build the message and displays it.
+void _showSecurityRiskWarning(List<SecurityRisk> risks) {
+  AppSnackBar.showErrorSnackBar(
+    title: 'Security notice',
+    message: SecurityService.buildWarningMessage(risks),
+    seconds: 5,
+  );
 }
 
 final supabase = Supabase.instance.client;
@@ -345,16 +398,16 @@ class MyApp extends ConsumerWidget {
   }
 }
 
-class AuthGate extends ConsumerWidget {
-  const AuthGate({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(authStateProvider);
-    final session = Supabase.instance.client.auth.currentSession;
-    return session != null ? const AuthedBootstrap() : const LoginScreen();
-  }
-}
+// class AuthGate extends ConsumerWidget {
+//   const AuthGate({super.key});
+//
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     ref.watch(authStateProvider);
+//     final session = Supabase.instance.client.auth.currentSession;
+//     return session != null ? const AuthedBootstrap() : const LoginScreen();
+//   }
+// }
 
 class MissingConfigApp extends StatelessWidget {
   const MissingConfigApp({super.key, required this.missingKeys});

@@ -1,5 +1,5 @@
+import 'package:dating_app/core/extensions/unfocus_on_tap_extension.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -212,7 +212,7 @@ Future<void> _onContinue() async {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: _isAdult
-                        ? AppColors.primary.withOpacity(0.08)
+                        ? AppColors.primary.withValues(alpha: 0.08)
                         : (_selectedDate != null
                             ? AppColors.danger.withValues(alpha: 0.08) // tint if picked but underage
                             : AppColors.card),
@@ -333,7 +333,7 @@ Future<void> _onContinue() async {
             ],
           ),
         ),
-      ),
+      ).unfocusOnTap(),
     );
   }
 

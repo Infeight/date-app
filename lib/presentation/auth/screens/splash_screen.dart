@@ -7,6 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:pub_semver/pub_semver.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/constants/static_assets/app_icons.dart';
 import '../../../core/logger/app_logger.dart';
 import '../../../core/router/app_router.dart';
@@ -17,7 +21,6 @@ import '../../../core/utils/utils.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../providers/notification_provider.dart';
-import 'package:pub_semver/pub_semver.dart';
 import '../../../providers/profile_provider.dart';
 import '../../common/force_update_maintenance/presentation/pages/maintenance_screen.dart';
 import '../../home/screens/dashboard_screen.dart';
@@ -31,54 +34,117 @@ import 'basics_screen7.dart';
 import 'login_screen.dart';
 import 'status_screen.dart';
 
-/// Entry point once a Supabase session exists: loads the domain user
-/// (`GET /users/me`, which also provisions it on first call) and routes to home
-/// or back into the funnel at the exact step the backend says is outstanding.
-class AuthedBootstrap extends ConsumerStatefulWidget {
-  const AuthedBootstrap({super.key});
+class SplashScreen extends ConsumerStatefulWidget {
+  const SplashScreen({super.key, this.skipStartupChecks = false});
+
+  final bool skipStartupChecks;
 
   @override
-  ConsumerState<AuthedBootstrap> createState() => _AuthedBootstrapState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _AuthedBootstrapState extends ConsumerState<AuthedBootstrap> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  String _cachedAppVersion = '0.0.0';
   bool _pushStarted = false;
+  Object? _error;
 
   @override
-  Widget build(BuildContext context) {
-    final me = ref.watch(meProvider);
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initialize());
+  }
 
-    // Register this device for push the moment the domain user exists, and not
-    // a moment earlier: registration is keyed to that user, so doing it at
-    // launch — before `GET /users/me` has provisioned them — would either 401
-    // or attach the token to nothing.
-    //
-    // Guarded by a flag rather than by the build, because `build` runs on every
-    // rebuild and the permission prompt must appear exactly once. `start()` is
-    // idempotent besides, so the flag is belt and braces.
-    if (me.hasValue && !_pushStarted) {
-      _pushStarted = true;
-      // Off the build frame: `start()` shows a system permission dialog, and
-      // raising one mid-build is how you get a frame scheduled during a frame.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) ref.read(pushRegistrarProvider).start();
-      });
-    }
+  Future<void> _initialize() async {
+    if (mounted) setState(() => _error = null);
 
-    return me.when(
-      loading: () => const SplashScreen(),
-      error: (err, _) => _ErrorRetry(
-        message: err.toString(),
-        onRetry: () => ref.invalidate(meProvider),
-      ),
-      data: (user) => user.onboarding.isComplete
+    try {
+      if (!widget.skipStartupChecks) {
+        // ── Fetch Remote Config ONCE and reuse it for both checks below.
+        // Calling fetchAndActivate() twice back-to-back (once for version,
+        // once for maintenance) is what triggers the
+        // [firebase_remote_config/throttled] error — Firebase enforces a
+        // fetch quota, and hammering it twice per splash load burns through
+        // it fast (especially during dev/hot-restart testing).
+        final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
+        await _fetchRemoteConfigSafely(remoteConfig);
+        if (!mounted) return;
+
+        final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+        _cachedAppVersion = packageInfo.version;
+        AppLogger.d(
+          "Local App Version: $_cachedAppVersion "
+              "(package: ${packageInfo.packageName}, build: ${packageInfo.buildNumber})",
+        );
+        if (!mounted) return;
+
+        // ── Step 1: Force-update check ─────────────────────────────────────
+        final bool needsUpdate = _checkAppVersion(remoteConfig);
+        if (!mounted) return;
+
+        if (needsUpdate) {
+          context.go(AppRoutes.forceUpdate);
+          return;
+        }
+
+        // ── Step 2: Maintenance check ────────────────────────────────────────
+        // Pushes MaintenanceScreen itself and returns true if the app is
+        // currently under maintenance; nothing further to do here in that case.
+        final bool isUnderMaintenance = _checkMaintenanceMode(remoteConfig);
+        if (!mounted) return;
+
+        if (isUnderMaintenance) {
+          return;
+        }
+      }
+
+      // ── Step 3: Auth routing ─────────────────────────────────────────────
+      final session = Supabase.instance.client.auth.currentSession;
+      if (!mounted) return;
+
+      if (session == null) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+        );
+        return;
+      }
+
+      // ── Step 4: Domain user (provisions on first call) + onboarding state ─
+      // Invalidate first so a retry after a previous failure actually
+      // re-fetches instead of replaying a cached error.
+      ref.invalidate(meProvider);
+      final user = await ref.read(meProvider.future);
+      if (!mounted) return;
+
+      // Register this device for push the moment the domain user exists, and
+      // not a moment earlier: registration is keyed to that user, so doing it
+      // before `GET /users/me` has provisioned them would either 401 or
+      // attach the token to nothing.
+      if (!_pushStarted) {
+        _pushStarted = true;
+        ref.read(pushRegistrarProvider).start();
+      }
+
+      final Widget destination = user.onboarding.isComplete
           ? const DashboardScreen()
-          : _resumeAt(user.onboarding.nextStep),
-    );
+          : _resumeAt(user.onboarding.nextStep);
+
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => destination),
+            (route) => false,
+      );
+    } catch (e, st) {
+      // Outer safety net — never leave the user stuck on the splash screen.
+      AppLogger.e("!!! UNHANDLED ERROR IN SPLASH INITIALIZE !!!");
+      AppLogger.e("Exception: $e");
+      AppLogger.e("Stacktrace: $st");
+      if (mounted) setState(() => _error = e);
+    }
   }
 
   /// Maps the backend's outstanding step to the screen that satisfies it, so a
-  /// refresh mid-funnel picks up where the user left off instead of restarting
+  /// retry mid-funnel picks up where the user left off instead of restarting
   /// from the age gate.
   ///
   /// Two screens each save a pair of steps (intent+personality,
@@ -104,101 +170,15 @@ class _AuthedBootstrapState extends ConsumerState<AuthedBootstrap> {
       case OnboardingSteps.agreement:
         return const BasicsScreen7();
       default:
-        // No step named (or an unknown one from a newer backend): start over
-        // rather than guess. Completed steps are skipped by the funnel anyway.
+      // No step named (or an unknown one from a newer backend): start over
+      // rather than guess. Completed steps are skipped by the funnel anyway.
         return const AgeScreen();
     }
   }
-}
-
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  String _cachedAppVersion = '0.0.0';
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // _initialize();
-    });
-  }
-
-  // Future<void> _initialize() async {
-  //   try {
-  //     await Future.delayed(const Duration(seconds: 2));
-  //     if (!mounted) return;
-  //
-  //     // ── Fetch Remote Config ONCE and reuse it for both checks below.
-  //     // Calling fetchAndActivate() twice back-to-back (once for version,
-  //     // once for maintenance) is what triggers the
-  //     // [firebase_remote_config/throttled] error — Firebase enforces a
-  //     // fetch quota, and hammering it twice per splash load burns through
-  //     // it fast (especially during dev/hot-restart testing).
-  //     final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
-  //     await _fetchRemoteConfigSafely(remoteConfig);
-  //     if (!mounted) return;
-  //
-  //     final PackageInfo packageInfo = await PackageInfo.fromPlatform();
-  //     _cachedAppVersion = packageInfo.version;
-  //     AppLogger.d(
-  //       "Local App Version: $_cachedAppVersion "
-  //           "(package: ${packageInfo.packageName}, build: ${packageInfo.buildNumber})",
-  //     );
-  //     if (!mounted) return;
-  //
-  //     // ── Step 1: Force-update check ─────────────────────────────────────
-  //     final bool needsUpdate = _checkAppVersion(remoteConfig);
-  //     if (!mounted) return;
-  //
-  //     if (needsUpdate) {
-  //       context.go(AppRoutes.forceUpdate);
-  //       return;
-  //     }
-  //
-  //     // ── Step 2: Maintenance check ────────────────────────────────────────
-  //     final bool isUnderMaintenance = _checkMaintenanceMode(remoteConfig);
-  //     if (!mounted) return;
-  //
-  //     if (isUnderMaintenance) {
-  //       return;
-  //     }
-  //
-  //     // ── Step 3: Auth routing ─────────────────────────────────────────────
-  //     String? token;
-  //     try {
-  //       final data = await HiveHelper.getData(key: HiveKeys.token);
-  //       token = data?.toString();
-  //     } catch (e, st) {
-  //       AppLogger.e("Failed to read auth token from Hive: $e");
-  //       AppLogger.e("Stacktrace: $st");
-  //       token = null; // fall back to onboarding if local storage read fails
-  //     }
-  //
-  //     if (!mounted) return;
-  //
-  //     if (token != null && token.isNotEmpty) {
-  //       context.go(AppRoutes.dashboard);
-  //     } else {
-  //       context.go(AppRoutes.onboard);
-  //     }
-  //   } catch (e, st) {
-  //     // Outer safety net — never leave the user stuck on the splash screen.
-  //     AppLogger.e("!!! UNHANDLED ERROR IN SPLASH INITIALIZE !!!");
-  //     AppLogger.e("Exception: $e");
-  //     AppLogger.e("Stacktrace: $st");
-  //   }
-  // }
 
   Future<void> _fetchRemoteConfigSafely(
       FirebaseRemoteConfig remoteConfig,
-      ) async
-  {
+      ) async {
     try {
       await remoteConfig.setConfigSettings(
         RemoteConfigSettings(
@@ -343,6 +323,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_error != null) {
+      return _ErrorRetry(message: _error.toString(), onRetry: _initialize);
+    }
+
     final colorScheme = Theme.of(context).colorScheme;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -913,7 +897,7 @@ class _ErrorRetry extends StatelessWidget {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
+                          (route) => false,
                     );
                   }
                 },

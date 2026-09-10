@@ -1,4 +1,4 @@
-import 'package:dating_app/presentation/auth/screens/authed_bootstrap.dart';
+import 'package:dating_app/presentation/auth/screens/splash_screen.dart';
 import 'package:dating_app/presentation/home/screens/archived_chats_screen.dart';
 import 'package:dating_app/presentation/home/screens/dashboard_screen.dart';
 import 'package:dating_app/presentation/home/screens/premium_screen.dart';
@@ -13,17 +13,17 @@ import 'app_router.dart';
 GoRouter appRouter = GoRouter(
   navigatorKey: navigatorKey,
   observers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
-  initialLocation: AppRoutes.authGate,
+  initialLocation: AppRoutes.splash,
   routes: [
     GoRoute(
       path: AppRoutes.forceUpdate,
       pageBuilder: (c, s) => _rtl(const ForceUpdateScreen()),
     ),
 
-    GoRoute(
-      path: AppRoutes.authGate,
-      pageBuilder: (c, s) => _rtl(const AuthGate()),
-    ),
+    // GoRoute(
+    //   path: AppRoutes.authGate,
+    //   pageBuilder: (c, s) => _rtl(const AuthGate()),
+    // ),
 
     GoRoute(
       path: AppRoutes.archivedChats,

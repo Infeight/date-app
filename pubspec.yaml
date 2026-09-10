@@ -75,6 +75,8 @@ dependencies:
   equatable: ^2.1.0
   in_app_purchase: ^3.3.0
   intl: ^0.20.3
+  freerasp: ^8.2.2
+  safe_device: ^1.4.1
 
 dev_dependencies:
   flutter_test:

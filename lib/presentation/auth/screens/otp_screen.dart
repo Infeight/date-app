@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../common/widgets/widgets.dart';
-import 'authed_bootstrap.dart';
+import 'splash_screen.dart';
 import '../../../data/services/auth_service.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -16,50 +16,50 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
   final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+  List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
-final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService();
 
   bool _isLoading = false;
 
   String get _otp => _controllers.map((c) => c.text).join();
 
-  // TODO: Replace with real API call when backend is ready
-
-Future<void> _onVerify() async {
-  if (_otp.length < 6) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please enter the complete OTP')),
-    );
-    return;
-  }
-
-  setState(() => _isLoading = true);
-
-  try {
-    final response = await _authService.verifyOtp(
-      phone: widget.phoneNumber,
-      token: _otp,
-    );
-
-    if (response.user != null && mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const AuthedBootstrap()),
-        (route) => false,
-      );
-    }
-  } catch (e) {
-    if (mounted) {
+  Future<void> _onVerify() async {
+    if (_otp.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid OTP: ${e.toString()}')),
+        const SnackBar(content: Text('Please enter the complete OTP')),
       );
+      return;
     }
-  } finally {
-    setState(() => _isLoading = false);
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _authService.verifyOtp(
+        phone: widget.phoneNumber,
+        token: _otp,
+      );
+
+      if (response.user != null && mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const SplashScreen(skipStartupChecks: true),
+          ),
+              (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid OTP: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
-}
 
   void _onOtpChanged(String value, int index) {
     if (value.isNotEmpty && index < 5) {
@@ -88,8 +88,12 @@ Future<void> _onVerify() async {
 
   @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -213,13 +217,13 @@ Future<void> _onVerify() async {
                   child: _isLoading
                       ? CircularProgressIndicator(color: AppColors.onAccent)
                       : Text(
-                          'Verify & Continue',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.onAccent,
-                          ),
-                        ),
+                    'Verify & Continue',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.onAccent,
+                    ),
+                  ),
                 ),
               ),
 

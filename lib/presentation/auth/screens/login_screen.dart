@@ -5,7 +5,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../common/widgets/widgets.dart';
 import 'otp_screen.dart';
 import '../../../data/services/auth_service.dart';
-import 'authed_bootstrap.dart';
+import 'splash_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -80,12 +80,15 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (response.user != null && mounted) {
-        // Real onboarding-vs-home routing happens in AuthedBootstrap once the
-        // domain user (/users/me) is loaded.
+        // Real onboarding-vs-home routing happens in SplashScreen, which
+        // re-runs its full init sequence (session check → /users/me →
+        // onboarding step) now that a session exists.
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const AuthedBootstrap()),
-          (route) => false,
+          MaterialPageRoute(
+            builder: (_) => const SplashScreen(skipStartupChecks: true),
+          ),
+              (route) => false,
         );
       }
     } catch (e, stack) {
@@ -225,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Real, verified people nearby who want the same thing you '
-                      'do. No endless swiping.',
+                          'do. No endless swiping.',
                       style: AppTextStyles.bodyMuted,
                     ),
 
@@ -284,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Center(
                       child: Text(
                         "By continuing you confirm you're 18 or older and agree "
-                        'to our Terms and Privacy Policy.',
+                            'to our Terms and Privacy Policy.',
                         textAlign: TextAlign.center,
                         style: AppTextStyles.caption.copyWith(fontSize: 11.5),
                       ),
