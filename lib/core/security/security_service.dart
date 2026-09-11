@@ -154,7 +154,7 @@ abstract final class SecurityService {
       if (debugForceSoftRisks) {
         AppLogger.d(
           'SecurityService: debugForceSoftRisks is true — injecting all '
-          'soft risks for testing: $_softRisks',
+              'soft risks for testing: $_softRisks',
         );
       }
 
@@ -208,8 +208,14 @@ abstract final class SecurityService {
         onADBEnabled: () => _detectedRisks.add(SecurityRisk.devModeEnabled),
         onHooks: () => _detectedRisks.add(SecurityRisk.hookDetected),
         onDeviceBinding: () => _detectedRisks.add(SecurityRisk.appTampered),
-        onAppIntegrity: () =>
-            _detectedRisks.add(SecurityRisk.appIntegrityFailed),
+        // ⚠️ Temporarily disabled: this is the "invalid app signature" /
+        // integrity check. It's being suppressed here because the
+        // signing cert hash / Play App Signing setup isn't finalized yet
+        // and it was blocking legitimate builds. Re-enable once
+        // signingCertHashes (Android) and teamId (iOS) are correctly
+        // configured for the real release + Play App Signing certs.
+        // onAppIntegrity: () =>
+        //     _detectedRisks.add(SecurityRisk.appIntegrityFailed),
         onObfuscationIssues: () =>
             _detectedRisks.add(SecurityRisk.obfuscationIssues),
         // Needs real Play Console / App Store Connect app ID to enforce.
@@ -245,17 +251,17 @@ abstract final class SecurityService {
 
     await check(() => SafeDevice.isMockLocation, SecurityRisk.mockLocation);
     await check(
-      () => SafeDevice.isOnExternalStorage,
+          () => SafeDevice.isOnExternalStorage,
       SecurityRisk.externalStorage,
     );
     await check(
-      () async => !(await SafeDevice.isRealDevice),
+          () async => !(await SafeDevice.isRealDevice),
       SecurityRisk.notRealDevice,
     );
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       await check(
-        () => SafeDevice.isDevelopmentModeEnable,
+            () => SafeDevice.isDevelopmentModeEnable,
         SecurityRisk.devModeEnabled,
       );
     }

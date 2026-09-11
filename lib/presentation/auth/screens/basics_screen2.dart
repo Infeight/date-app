@@ -188,7 +188,7 @@ class _BasicsScreen2State extends ConsumerState<BasicsScreen2> {
                     const SizedBox(height: 14),
                     personality.when(
                       loading: () => Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         child: SizedBox(
                           height: 22,
                           width: 22,

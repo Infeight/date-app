@@ -1,9 +1,5 @@
-import 'package:dating_app/core/constants/app_constants.dart';
-import 'package:dating_app/core/constants/app_string.dart';
-import 'package:dating_app/core/constants/static_assets/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -135,8 +131,8 @@ class _YouScreenState extends ConsumerState<YouScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
             child: Wordmark(),
           ),
 
@@ -144,9 +140,9 @@ class _YouScreenState extends ConsumerState<YouScreen> {
 
           const SizedBox(height: 20),
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: const LocationSharingCard(),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: LocationSharingCard(),
           ),
 
           const SizedBox(height: 20),
@@ -452,7 +448,7 @@ class _DarkModeTile extends ConsumerWidget {
             ),
             Switch(
               value: dark,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
               onChanged: (on) =>
                   ref.read(themeModeProvider.notifier).toggle(dark: on),
             ),

@@ -95,7 +95,9 @@ Future<void> _onContinue() async {
               surface: AppColors.card,
               onSurface: AppColors.textDark,
             ),
-            dialogBackgroundColor: AppColors.card,
+            dialogTheme: DialogThemeData(
+              backgroundColor: AppColors.card,
+            ),
           ),
           child: child!,
         );
@@ -132,7 +134,7 @@ Future<void> _onContinue() async {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Wordmark(),
+                  const Wordmark(),
                   Icon(Icons.tune, color: AppColors.textDark),
                 ],
               ),
@@ -323,7 +325,7 @@ Future<void> _onContinue() async {
                                 color: AppColors.onAccent,
                               ),
                             ),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Icon(Icons.arrow_forward, color: AppColors.onAccent, size: 18),
                           ],
                         ),

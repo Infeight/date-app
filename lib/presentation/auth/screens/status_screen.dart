@@ -120,7 +120,7 @@ class _StatusScreenState extends ConsumerState<StatusScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.primary.withOpacity(0.06)
+                ? AppColors.primary.withValues(alpha:0.06)
                 : AppColors.card,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(

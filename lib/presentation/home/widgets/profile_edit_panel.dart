@@ -310,7 +310,7 @@ class _ProfileEditPanelState extends ConsumerState<ProfileEditPanel> {
 
         if (loadingTags)
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 18),
+            padding: const EdgeInsets.symmetric(vertical: 18),
             child: Center(
               child: SizedBox(
                 width: 20,
@@ -382,7 +382,7 @@ class _ProfileEditPanelState extends ConsumerState<ProfileEditPanel> {
                     ),
                     Switch(
                       value: _showHardNos,
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                       onChanged: (v) => setState(() => _showHardNos = v),
                     ),
                   ],

@@ -159,10 +159,10 @@ class _TapZone extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: onTap,
-          child: FractionallySizedBox(
+          child: const FractionallySizedBox(
             widthFactor: 0.28,
             heightFactor: 1,
-            child: const SizedBox.expand(),
+            child: SizedBox.expand(),
           ),
         ),
       ),

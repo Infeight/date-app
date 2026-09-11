@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../main.dart';
 import '../../presentation/common/force_update_maintenance/presentation/pages/force_update_screen.dart';
+import '../../presentation/internet/view/screens/internet_screen.dart';
 import '../../presentation/notifications/view/pages/notification_screen.dart';
 import 'app_router.dart';
 
@@ -48,6 +49,12 @@ GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.notifications,
       pageBuilder: (c, s) => _rtl(const NotificationsScreen()),
+    ),
+
+    GoRoute(
+      path: AppRoutes.internet,   // e.g. '/internet' — this is the URL/path
+      name: 'internet',            // ← this is what you need to add
+      builder: (context, state) => const InternetScreen(),
     ),
   ],
 );

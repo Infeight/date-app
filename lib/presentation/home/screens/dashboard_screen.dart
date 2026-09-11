@@ -382,7 +382,7 @@ class _RadarTab extends ConsumerWidget {
                   ),
                 ),
               ),
-              error: (err, _) => SliverToBoxAdapter(
+              error: (err, _) => const SliverToBoxAdapter(
                 child: _EmptyState(
                   title: "Couldn't load your radar",
                   body: 'Check your connection and pull down to try again.',
@@ -403,7 +403,7 @@ class _RadarTab extends ConsumerWidget {
       Map<String, bool> presence,
       ) {
     if (state.needsLocation) {
-      return SliverToBoxAdapter(
+      return const SliverToBoxAdapter(
         child: _EmptyState(
           title: 'Set your location',
           body: 'cozune needs to know roughly where you are before it can '

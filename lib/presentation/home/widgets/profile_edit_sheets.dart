@@ -56,7 +56,7 @@ class _SheetShell extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
         child: Column(
@@ -239,7 +239,7 @@ class _EditVibesSheetState extends ConsumerState<_EditVibesSheet> {
               child: tags.when(
                 loading: () => Center(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
                     child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                 ),

@@ -51,7 +51,7 @@ class RadiusSheet extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppColors.panel,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

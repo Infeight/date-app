@@ -84,7 +84,7 @@ class _LocationAudienceScreenState
           loading: () => Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           ),
-          error: (_, _) => _Message(
+          error: (_, _) => const _Message(
             title: "Couldn't load your friends",
             body: 'Go back and try again in a moment.',
           ),

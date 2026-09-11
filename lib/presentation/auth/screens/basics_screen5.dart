@@ -9,14 +9,6 @@ import '../../../providers/profile_provider.dart';
 import '../../common/widgets/widgets.dart';
 import 'basics_screen7.dart';
 
-/// Step 9 · location.
-///
-/// Location permission, and nothing else. This screen used to open with a 2×2
-/// grid of search radii — Immediate / Local / Extended / Regional — which asked
-/// people to size a circle before they had seen a single profile, and then
-/// quietly capped discovery at that answer forever. The server already caps
-/// the search at a wide default, and distance still reaches people as a coarse
-/// band on each card, so the question bought nothing it did not also cost.
 class BasicsScreen5 extends ConsumerStatefulWidget {
   const BasicsScreen5({super.key});
 
@@ -146,7 +138,7 @@ class _BasicsScreen5State extends ConsumerState<BasicsScreen5> {
                                 children: [
                                   Icon(Icons.near_me,
                                       color: AppColors.onAccent, size: 18),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Text(
                                     'Allow location',
                                     style: TextStyle(
@@ -175,9 +167,9 @@ class _BasicsScreen5State extends ConsumerState<BasicsScreen5> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.07),
+        color: AppColors.primary.withValues(alpha:0.07),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha:0.2)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

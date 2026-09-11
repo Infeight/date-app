@@ -99,10 +99,10 @@ Future<void> _pump(
       ],
       child: MaterialApp(
         theme: AppTheme.light,
-        home: Scaffold(
+        home: const Scaffold(
           body: ProfileDetailSheet(
             userId: _id,
-            seed: const ProfileSeed(name: 'Ava', colorIndex: 0, age: 27),
+            seed: ProfileSeed(name: 'Ava', colorIndex: 0, age: 27),
           ),
         ),
       ),

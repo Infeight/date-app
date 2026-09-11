@@ -104,7 +104,7 @@ class _DiscoveryFilterSheetState extends ConsumerState<_DiscoveryFilterSheet> {
       builder: (context, scrollController) => Container(
         decoration: BoxDecoration(
           color: AppColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           children: [
@@ -137,7 +137,7 @@ class _DiscoveryFilterSheetState extends ConsumerState<_DiscoveryFilterSheet> {
                   const SizedBox(height: 4),
                   Text(
                     _draft.maxAge >= kAgeFilterMax
-                        ? '${_draft.minAge} – ${kAgeFilterMax}+'
+                        ? '${_draft.minAge} – $kAgeFilterMax+'
                         : '${_draft.minAge} – ${_draft.maxAge}',
                     style: TextStyle(
                       fontSize: 15,
@@ -158,7 +158,7 @@ class _DiscoveryFilterSheetState extends ConsumerState<_DiscoveryFilterSheet> {
                     labels: RangeLabels(
                       '${_draft.minAge}',
                       _draft.maxAge >= kAgeFilterMax
-                          ? '${kAgeFilterMax}+'
+                          ? '$kAgeFilterMax+'
                           : '${_draft.maxAge}',
                     ),
                     onChanged: (values) => _edit(_draft.copyWith(
@@ -236,7 +236,7 @@ class _DiscoveryFilterSheetState extends ConsumerState<_DiscoveryFilterSheet> {
                   ...tags.when(
                     loading: () => [
                       Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
+                        padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Center(
                           child: CircularProgressIndicator(
                             color: AppColors.primary,
@@ -333,7 +333,7 @@ class _DiscoveryFilterSheetState extends ConsumerState<_DiscoveryFilterSheet> {
 
     final label = count.when(
       loading: () => 'Show results',
-      error: (_, __) => 'Show results',
+      error: (_, _) => 'Show results',
       data: (total) => total == 1 ? 'Show 1 person' : 'Show $total people',
     );
 
@@ -348,7 +348,7 @@ class _DiscoveryFilterSheetState extends ConsumerState<_DiscoveryFilterSheet> {
         children: [
           if (!isPremium && _draft.usesPremiumFilters)
             Padding(
-              padding: EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Text(
                 'Premium filters are ignored until you upgrade.',
                 style: TextStyle(fontSize: 12, color: AppColors.textGrey),
@@ -545,7 +545,7 @@ class _Chip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
           decoration: BoxDecoration(
             color:
-                selected ? AppColors.primary.withOpacity(0.1) : AppColors.card,
+                selected ? AppColors.primary.withValues(alpha:0.1) : AppColors.card,
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
               color: selected ? AppColors.primary : AppColors.inputBorder,
@@ -619,7 +619,7 @@ class _SwitchTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: enabled ? onChanged : null,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),

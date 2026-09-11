@@ -37,7 +37,7 @@ class _RequestsScreenState extends ConsumerState<ChatsScreen>
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _Header(),
+        const _Header(),
         _TabBarSection(tabController: _tabController),
         Expanded(
           child: TabBarView(
@@ -219,7 +219,7 @@ class _ConversationList extends ConsumerWidget {
       loading: () => Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
-      error: (err, _) => _Empty(
+      error: (err, _) => const _Empty(
         title: "Couldn't load conversations",
         body: 'Pull down to try again.',
       ),

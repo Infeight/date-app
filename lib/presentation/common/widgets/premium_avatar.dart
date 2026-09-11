@@ -240,13 +240,13 @@ class _PremiumRim extends StatelessWidget {
             gradient: SweepGradient(
               colors: [
                 AppColors.premium,
-                Color(0xFFEDE6FF),
-                Color(0xFFC9B0FF),
+                const Color(0xFFEDE6FF),
+                const Color(0xFFC9B0FF),
                 AppColors.premium,
-                Color(0xFF4A21B8),
+                const Color(0xFF4A21B8),
                 AppColors.premium,
               ],
-              stops: [0.0, 0.18, 0.34, 0.55, 0.78, 1.0],
+              stops: const [0.0, 0.18, 0.34, 0.55, 0.78, 1.0],
             ),
           ),
         ),
@@ -296,8 +296,8 @@ class _CrownPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFFDCCBFF), AppColors.premium, Color(0xFF4A21B8)],
-        stops: [0.0, 0.55, 1.0],
+        colors: [const Color(0xFFDCCBFF), AppColors.premium, const Color(0xFF4A21B8)],
+        stops: const [0.0, 0.55, 1.0],
       ).createShader(Rect.fromLTWH(0, 0, w, h));
 
     canvas.drawShadow(crown, Colors.black.withValues(alpha: 0.5), 2, false);

@@ -351,7 +351,7 @@ class _BasicsScreenState extends ConsumerState<BasicsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withOpacity(0.1) : AppColors.card,
+          color: selected ? AppColors.primary.withValues(alpha:0.1) : AppColors.card,
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.inputBorder,

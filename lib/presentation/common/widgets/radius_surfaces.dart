@@ -175,7 +175,7 @@ class TickRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 2),
+            padding: const EdgeInsets.only(top: 2),
             child: Icon(Icons.check, size: 17, color: AppColors.ok),
           ),
           const SizedBox(width: 10),

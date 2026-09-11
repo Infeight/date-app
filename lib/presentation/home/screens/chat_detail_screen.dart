@@ -711,7 +711,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          BannerAdWidget().paddingOnly(bottom: 10.h),
+          const BannerAdWidget().paddingOnly(bottom: 10.h),
           Row(
             children: [
               Expanded(
@@ -732,7 +732,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen>
                       hintStyle: TextStyle(color: AppColors.textGrey, fontSize: 14),
                       border: InputBorder.none,
                       contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     ),
                     onSubmitted: (_) => _sendMessage(),
                   ),
@@ -750,7 +750,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen>
                   ),
                   child: _sending
                       ? Padding(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     child: CircularProgressIndicator(
                         color: AppColors.onAccent, strokeWidth: 2),
                   )

@@ -220,15 +220,15 @@ class _BasicsScreen4State extends ConsumerState<BasicsScreen4> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.08),
+                        color: AppColors.primary.withValues(alpha:0.08),
                         borderRadius: BorderRadius.circular(10),
                         border:
-                            Border.all(color: AppColors.primary.withOpacity(0.2)),
+                            Border.all(color: AppColors.primary.withValues(alpha:0.2)),
                       ),
                       child: Row(
                         children: [
                           Icon(Icons.block, size: 16, color: AppColors.primary),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               'Keep photos clear and respectful — no nudity.',
@@ -249,7 +249,7 @@ class _BasicsScreen4State extends ConsumerState<BasicsScreen4> {
                       children: [
                         Icon(Icons.lightbulb_outline,
                             size: 16, color: AppColors.textGrey),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         // Unconstrained text in a Row overflows once the system
                         // font scale goes up; let it take the remaining width
                         // instead.
@@ -407,7 +407,7 @@ class _BasicsScreen4State extends ConsumerState<BasicsScreen4> {
                     ),
                   ] else
                     Icon(Icons.add,
-                        size: 22, color: AppColors.primary.withOpacity(0.6)),
+                        size: 22, color: AppColors.primary.withValues(alpha:0.6)),
                 ],
               )
             : Stack(
@@ -418,8 +418,8 @@ class _BasicsScreen4State extends ConsumerState<BasicsScreen4> {
                     child: Image.memory(
                       photo.bytes,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: AppColors.primary.withOpacity(0.12),
+                      errorBuilder: (_, _, _) => Container(
+                        color: AppColors.primary.withValues(alpha:0.12),
                         child: Icon(Icons.broken_image_outlined,
                             color: AppColors.textGrey),
                       ),
@@ -434,7 +434,7 @@ class _BasicsScreen4State extends ConsumerState<BasicsScreen4> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha:0.6),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.close,
@@ -450,7 +450,7 @@ class _BasicsScreen4State extends ConsumerState<BasicsScreen4> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha:0.5),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(

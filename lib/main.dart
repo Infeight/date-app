@@ -1,6 +1,7 @@
 import 'dart:async';
-
 import 'package:dating_app/core/constants/app_constants.dart';
+import 'package:dating_app/presentation/internet/viewmodel/providers/internet_provider/internet_provider.dart';
+import 'package:dating_app/presentation/internet/viewmodel/providers/internet_provider/internet_state.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -11,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,6 +22,7 @@ import 'core/logger/app_logger.dart';
 import 'core/notification/notification_helper.dart';
 import 'core/notification/push_deep_link.dart';
 import 'core/router/app_pages.dart';
+import 'core/router/app_router.dart';
 import 'core/security/security_breach_page.dart';
 import 'core/security/security_risk.dart';
 import 'core/security/security_service.dart';
@@ -47,7 +50,7 @@ void main() async {
     // flutter: assets: list. Log it and fall through to the missing-config
     // screen instead of crashing on a blank screen.
     AppLogger.fatal('Failed to load .env', error: e, stackTrace: s);
-    runApp(MissingConfigApp(missingKeys: const ['(.env failed to load)']));
+    runApp(const MissingConfigApp(missingKeys: ['(.env failed to load)']));
     return;
   }
 
@@ -59,11 +62,11 @@ void main() async {
   try {
     await Supabase.initialize(
       url: Env.supabaseUrl,
-      anonKey: Env.supabaseAnonKey,
+      publishableKey: Env.supabaseAnonKey,
     );
   } catch (e, s) {
     AppLogger.fatal('Supabase initialization failed', error: e, stackTrace: s);
-    runApp(MissingConfigApp(missingKeys: const ['(Supabase init failed)']));
+    runApp(const MissingConfigApp(missingKeys: ['(Supabase init failed)']));
     return;
   }
 
@@ -390,6 +393,11 @@ class MyApp extends ConsumerWidget {
               app = SafeArea(top: false, child: app);
             }
 
+            if (!kIsWeb) {
+              final Widget appToWrap = app; // snapshot BEFORE reassigning app
+              app = _InternetGate(child: appToWrap);
+            }
+
             return PaletteScope(child: app);
           },
         );
@@ -398,16 +406,49 @@ class MyApp extends ConsumerWidget {
   }
 }
 
-// class AuthGate extends ConsumerWidget {
-//   const AuthGate({super.key});
-//
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     ref.watch(authStateProvider);
-//     final session = Supabase.instance.client.auth.currentSession;
-//     return session != null ? const AuthedBootstrap() : const LoginScreen();
-//   }
-// }
+class _InternetGate extends ConsumerWidget {
+  final Widget child;
+
+  const _InternetGate({required this.child});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<InternetState>(internetProvider, (prev, curr) {
+      final navContext = navigatorKey.currentContext;
+      if (navContext == null) return;
+
+      final notifier = ref.read(internetProvider.notifier);
+
+      if (!curr.isConnected) {
+        if (!notifier.isInternetScreenShown) {
+          notifier.isInternetScreenShown = true;
+          navContext.push(AppRoutes.internet);
+        }
+        return;
+      }
+
+      // Internet is back — only pop if the internet screen is genuinely
+      // still the top route. Blindly calling pop() here could remove the
+      // wrong screen if the stack changed while offline.
+      if (!notifier.isInternetScreenShown) return;
+
+      final isInternetScreenOnTop =
+          ModalRoute.of(navContext)?.settings.name == 'internet';
+
+      if (isInternetScreenOnTop && navContext.canPop()) {
+        notifier.isInternetScreenShown = false;
+        navContext.pop();
+      } else {
+        // Stack changed while offline (internet screen isn't on top, or
+        // isn't in the stack at all) — nothing to pop, just reset the flag
+        // so a future disconnect can push it again.
+        notifier.isInternetScreenShown = false;
+      }
+    });
+
+    return child;
+  }
+}
 
 class MissingConfigApp extends StatelessWidget {
   const MissingConfigApp({super.key, required this.missingKeys});

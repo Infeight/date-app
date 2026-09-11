@@ -245,7 +245,7 @@ class _BasicsScreen6State extends ConsumerState<BasicsScreen6>
                       if (_isStarted && !_isDone)
                         AnimatedBuilder(
                           animation: _arcController,
-                          builder: (_, __) => CustomPaint(
+                          builder: (_, _) => CustomPaint(
                             size: const Size(240, 240),
                             painter: _ArcPainter(_arcController.value),
                           ),
@@ -255,7 +255,7 @@ class _BasicsScreen6State extends ConsumerState<BasicsScreen6>
                       if (_isStarted && !_isDone)
                         AnimatedBuilder(
                           animation: _stepController,
-                          builder: (_, __) => CustomPaint(
+                          builder: (_, _) => CustomPaint(
                             size: const Size(240, 240),
                             painter: _ProgressRingPainter(_stepController.value),
                           ),
@@ -330,7 +330,7 @@ class _BasicsScreen6State extends ConsumerState<BasicsScreen6>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             disabledBackgroundColor:
-                                AppColors.textGrey.withOpacity(0.3),
+                                AppColors.textGrey.withValues(alpha:0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -341,7 +341,7 @@ class _BasicsScreen6State extends ConsumerState<BasicsScreen6>
                             children: [
                               Icon(Icons.camera_alt_outlined,
                                   color: AppColors.onAccent, size: 18),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
                                 'Start Face Check',
                                 style: TextStyle(
@@ -470,7 +470,7 @@ class _BasicsScreen6State extends ConsumerState<BasicsScreen6>
                       // Progress bar for current step
                       AnimatedBuilder(
                         animation: _stepController,
-                        builder: (_, __) => ClipRRect(
+                        builder: (_, _) => ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: _stepController.value,
@@ -492,7 +492,7 @@ class _BasicsScreen6State extends ConsumerState<BasicsScreen6>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.lock_outline, size: 14, color: AppColors.textGrey),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Powered by a secure verification provider. Your privacy is protected. Data is encrypted and automatically deleted after verification.',
@@ -566,7 +566,7 @@ class _ArcPainter extends CustomPainter {
     canvas.drawCircle(center, radius, bgPaint);
 
     final arcPaint = Paint()
-      ..color = AppColors.primary.withOpacity(0.4)
+      ..color = AppColors.primary.withValues(alpha:0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;

@@ -244,11 +244,8 @@ class _MatchCelebrationOverlayState extends State<MatchCelebrationOverlay>
           ),
           Transform.translate(
             offset: Offset(-(size / 2 - 14) - gap, 0),
-            child: _Avatar(
+            child: const _Avatar(
               size: size,
-              // The other person's photo. Mine is deliberately absent — I know
-              // what I look like, and a second network image would be one more
-              // thing to fail mid-celebration.
               photoUrl: null,
               initial: 'You',
               colorIndex: 3,

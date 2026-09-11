@@ -110,7 +110,7 @@ class _BasicsScreen7State extends ConsumerState<BasicsScreen7> {
                             horizontal: 16, vertical: 18),
                         decoration: BoxDecoration(
                           color: checked
-                              ? AppColors.primary.withOpacity(0.06)
+                              ? AppColors.primary.withValues(alpha:0.06)
                               : AppColors.card,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
@@ -183,7 +183,7 @@ class _BasicsScreen7State extends ConsumerState<BasicsScreen7> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _allChecked
                         ? AppColors.primary
-                        : AppColors.textGrey.withOpacity(0.3),
+                        : AppColors.textGrey.withValues(alpha:0.3),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),

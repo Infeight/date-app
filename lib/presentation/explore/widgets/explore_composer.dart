@@ -226,7 +226,7 @@ class _ExploreComposerState extends ConsumerState<ExploreComposer> {
                 ),
                 child: _sending
                     ? Padding(
-                        padding: EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(12),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: AppColors.onAccent,

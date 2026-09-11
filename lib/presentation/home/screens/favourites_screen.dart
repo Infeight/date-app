@@ -1,7 +1,5 @@
-import 'package:dating_app/core/logger/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../core/ads/rewarded/rewarded_unlock_type.dart';
 import '../../../core/constants/app_string.dart';
 import '../../../core/theme/app_colors.dart';
@@ -118,18 +116,20 @@ class _LikedYouTab extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 22),
-            async.when(
-              loading: () => Padding(
-                padding: EdgeInsets.only(top: 80),
-                child: Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
+            Center(
+              child: async.when(
+                loading: () => Padding(
+                  padding: const EdgeInsets.only(top: 80),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
                 ),
+                error: (err, _) => const _Message(
+                  title: "Couldn't load your likes",
+                  body: 'Pull down to try again.',
+                ),
+                data: (page) => _body(context, page),
               ),
-              error: (err, _) => const _Message(
-                title: "Couldn't load your likes",
-                body: 'Pull down to try again.',
-              ),
-              data: (page) => _body(context, page),
             ),
             const SizedBox(height: 32),
           ],

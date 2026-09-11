@@ -157,7 +157,7 @@ class _NotificationTile extends StatelessWidget {
     final localTime = item.time.orNullLocal;
 
     return Container(
-      color: item.isRead ? null : Theme.of(context).primaryColor.withOpacity(0.05),
+      color: item.isRead ? null : Theme.of(context).primaryColor.withValues(alpha:0.05),
       child: ListTile(
         leading: _iconFor(item.type),
         title: Text(

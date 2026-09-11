@@ -9,18 +9,8 @@ import '../../../data/models/media_model.dart';
 import '../../../providers/core_providers.dart';
 import '../../../providers/profile_provider.dart';
 
-/// My photo gallery: the grid, the "+" tile, and everything you can do to a
-/// photo once it is up there.
-///
-/// Lifted out of `YouScreen` whole. It owns one piece of state (an upload in
-/// flight) and three server calls that nothing else on that screen touches, so
-/// keeping it inline meant every unrelated rebuild of the profile tab walked
-/// through 200 lines of gallery code.
 class YouGallery extends ConsumerStatefulWidget {
   const YouGallery({super.key, required this.primaryPhotoId});
-
-  /// Which photo is the profile picture — badged here, and offered as an action
-  /// on the others.
   final String? primaryPhotoId;
 
   @override
@@ -272,7 +262,7 @@ class _YouGalleryState extends ConsumerState<YouGallery> {
       builder: (sheetContext) => Container(
         decoration: BoxDecoration(
           color: AppColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         child: Column(
@@ -304,7 +294,7 @@ class _YouGalleryState extends ConsumerState<YouGallery> {
             else
               ListTile(
                 leading: Icon(Icons.check_circle, color: AppColors.primary),
-                title: Text('This is your profile photo'),
+                title: const Text('This is your profile photo'),
               ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),

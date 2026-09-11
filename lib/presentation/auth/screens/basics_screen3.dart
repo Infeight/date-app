@@ -14,22 +14,6 @@ import '../../common/widgets/widgets.dart';
 import '../widgets/onboarding_widgets.dart';
 import 'basics_screen4.dart';
 
-/// Steps 6 + 7 — "Define your vibe" (`PATCH /onboarding/preferences`) and
-/// "My hard no's" (`PATCH /onboarding/hard-nos`).
-///
-/// Every chip comes from `GET /tags`; the API validates slugs against the
-/// catalogue, so labels are never sent. That is also why the step-6 vocabulary
-/// swap needed no change here: the six sections, their captions and their caps
-/// are structural, and the words inside them are catalogue data.
-///
-/// The verified-members-only rule on tags flagged sensitive is switched off for
-/// now (the `requireVerificationForDesires` flag keeps its old name because it
-/// is an env key) — everyone can select anything, and saving none is allowed.
-///
-/// Each section carries its own cap ([SelectionLimits.intoByCategory]) rather
-/// than sharing one budget across the step; hard no's are never capped. Both
-/// limits are the same constants the "Me" tab's editor enforces, so an answer
-/// given in the funnel and an answer edited later obey one rule.
 class BasicsScreen3 extends ConsumerStatefulWidget {
   const BasicsScreen3({super.key});
 
@@ -147,7 +131,7 @@ class _BasicsScreen3State extends ConsumerState<BasicsScreen3> {
 
                     tags.when(
                       loading: () => Padding(
-                        padding: EdgeInsets.symmetric(vertical: 32),
+                        padding: const EdgeInsets.symmetric(vertical: 32),
                         child: Center(
                           child: CircularProgressIndicator(
                             color: AppColors.primary,
@@ -237,9 +221,9 @@ class _BasicsScreen3State extends ConsumerState<BasicsScreen3> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.07),
+        color: AppColors.primary.withValues(alpha:0.07),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha:0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,7 +234,7 @@ class _BasicsScreen3State extends ConsumerState<BasicsScreen3> {
               Switch(
                 value: _showHardNosOnProfile,
                 onChanged: (v) => setState(() => _showHardNosOnProfile = v),
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
               ),
               Flexible(
                 child: Text(

@@ -30,7 +30,7 @@ void main() {
     await Supabase.initialize(
       url: 'http://localhost:54321',
       publishableKey: 'test-publishable-key',
-      authOptions: FlutterAuthClientOptions(
+      authOptions: const FlutterAuthClientOptions(
         localStorage: EmptyLocalStorage(),
         autoRefreshToken: false,
         detectSessionInUri: false,

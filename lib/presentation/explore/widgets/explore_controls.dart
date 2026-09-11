@@ -289,7 +289,7 @@ class _ExploreCircleButtonState extends State<ExploreCircleButton> {
               height: 46,
               child: widget.busy
                   ? Padding(
-                      padding: EdgeInsets.all(13),
+                      padding: const EdgeInsets.all(13),
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
                         color: AppColors.primary,

@@ -79,7 +79,7 @@ class _ExplorePeopleGridState extends State<ExplorePeopleGrid> {
       height: MediaQuery.sizeOf(context).height * kSheetHeightFraction,
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
       ),
       child: SafeArea(
         top: false,

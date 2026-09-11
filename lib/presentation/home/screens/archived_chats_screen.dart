@@ -95,7 +95,7 @@ class ArchivedChatsScreen extends ConsumerWidget {
               ),
             ),
           ),
-          Align(
+          const Align(
             alignment: Alignment.bottomCenter,
             child: BannerAdWidget(),
           ),

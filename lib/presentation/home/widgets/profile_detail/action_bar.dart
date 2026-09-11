@@ -93,7 +93,7 @@ class ProfileActionBar extends StatelessWidget {
                 ),
                 child: isSending
                     ? Padding(
-                  padding: EdgeInsets.all(13),
+                  padding: const EdgeInsets.all(13),
                   child: CircularProgressIndicator(
                     color: AppColors.onAccent,
                     strokeWidth: 2,

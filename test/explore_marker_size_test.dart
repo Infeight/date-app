@@ -28,7 +28,7 @@ void main() {
 
   // The unselected disc, rasterised at `rasterScale`.
   const disc = 54.0;
-  final bitmap = disc * ExploreMarkerImages.rasterScale;
+  const bitmap = disc * ExploreMarkerImages.rasterScale;
 
   test('draws at life size on a 1× screen', () {
     expect(
